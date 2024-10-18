@@ -1,0 +1,329 @@
+import os
+import ast
+global stock
+
+basedir = os.getcwd()
+try:
+    os.chdir("tables")
+
+except FileNotFoundError:
+    try:
+        os.mkdir("tables")
+        os.chdir("tables")
+        f = open("stock.db", "w")
+        f.write('[]')
+        f.close()
+    except PermissionError:
+        print(f"The application does not have permisison to ctreate or change to the {basedir}/tables directory!")
+except PermissionError:
+    print(f"The application does not have permisison to ctreate or change to the {basedir}/tables directory!")
+except:
+    print("An unexpected error has occurred")
+
+def updatelist():
+    global stock
+    f = open("stock.db", "r")
+    stock = ast.literal_eval(f.read())
+    f.close()
+
+def updatetable(new_table):
+    f = open("stock.db", "w")
+    f.write(f"{new_table}")
+    f.close()
+
+def item_rawsearch(id = None, name = None):
+    global stock
+    if id != None:
+        for item in stock:
+            if id in item:
+                return item
+    else:
+        if name != None:
+            for item in stock:
+                if name in item:
+                    return item
+        else:
+            print("No item name or ID provided for item")
+            input("Press RETURN to exit...")
+            return None
+    return None
+
+def qty_sub(id = None, qty = 0):
+    global stock
+    if id != None and qty != 0:
+        for item in stock:
+            if item[0] == id:
+                item[2] -= qty
+    else:
+        print("No ID or no quantity provided for qty_sub operation")
+        input("Press RETURN to exit...")
+
+def qty_add(id = None, qty = 0):
+    global stock
+    if id != None and qty != 0:
+        for item in stock:
+            if item[0] == id:
+                item[2] += qty
+    else:
+        print("No ID or no quantity provided for qty_add operation")
+        input("Press RETURN to exit...")
+
+def log(message):
+    cdir = os.getcwd()
+    os.chdir(basedir)
+    f = open("DBMS.log", "a")
+    f.write(message + "\n")
+    f.close()
+    os.chdir(cdir)
+
+def item_add():
+    global stock
+    id = len(stock) + 1
+    name = str(input("Item Name: ").lower())
+    if item_rawsearch(name) == None:
+        while True:
+            try:
+                qty = int(input("Quantity: "))
+                break
+            except ValueError:
+                print("Please enter a whole number.")
+        while True:
+            try:
+                price = float(input("Price: "))
+                break
+            except ValueError:
+                print("Please enter a valid price (e.g '1.00' or '2.99')")
+        type = str(input("Type: ").lower())
+        item = [id, name, qty, price, type]
+        stock.append(item)
+        log(f"Added item {id} '{name}' to stock")
+        updatetable(stock)
+        print(f"Added item {id} '{name}' to stock")
+        input("Press RETURN to exit...")
+    else:
+        print(f"Item called {name} already exists")
+        input("Press RETURN to exit...")
+
+def item_sale():
+    name = str(input("Item Name: ").lower())
+    item = item_rawsearch(name)
+    if item != None:
+        qty = int(input("Amount Sold: "))
+        if item[3] < qty:
+            print(f"Quantity amount {qty} exceeds stock amount {item[3]}")
+            input("Press RETURN to exit...")
+            return
+        else:
+            price = item[3] * qty
+            print(f"Sale Price: {price}\n1. Confirm sale\n2. Cancel sale")
+            while True:
+                while True:
+                    try:
+                        cmd = int(input("> "))
+                        break
+                    except ValueError:
+                        print("Please chose an option from the numbers above")
+                if cmd == 1:
+                    log(f"Sale confirmed for x{qty} {name}(s) for £{price}")
+                    qty_sub(item[0], qty)
+                    updatetable(stock)
+                    print("Sale sucessful")
+                    input("Press RETURN to exit...")
+                    break
+                elif cmd == 2:
+                    print("Sale cancelled")
+                    input("Press RETURN to exit...")
+                    break
+                else:
+                    print("Please chose an option from the numbers above")
+    else:
+        print(f"Item called {item} does not exist.")
+        input("Press RETURN to exit...")
+
+def item_stock():
+    name = str(input("Item Name: ").lower())
+    item = item_rawsearch(name)
+    if item != None:
+        while True:
+            try:
+                qty = int(input("Amount Stocked: "))
+                break
+            except ValueError:
+                print("Please enter a whole number")
+        print(f"Restocked amount: {qty}\n1. Confirm restock\n2. Cancel restock")
+        while True:
+            while True:
+                try:
+                    cmd = int(input("> "))
+                    break
+                except ValueError:
+                    print("Please chose an option from the numbers above")
+            if cmd == 1:
+                log(f"Restock confirmed for x{qty} {name}(s)")
+                qty_add(item[0], qty)
+                updatetable(stock)
+                print("Restock sucessful")
+                input("Press RETURN to exit...")
+                break
+            elif cmd == 2:
+                print("Restock cancelled")
+                input("Press RETURN to exit...")
+                break
+            else:
+                print("Please chose an option from the numbers above")
+    else:
+        print(f"Item called {name} does not exist.")
+        input("Press RETURN to exit...")
+
+def logs():
+    cdir = os.getcwd()
+    os.chdir(basedir)
+    f = open("DBMS.log", "r")
+    print(f.read())
+    f.close()
+    os.chdir(cdir)
+    input("Press RETURN to exit...")
+
+def item_upd():
+    global stock
+    name = input("\nItem name: ").lower()
+    item = item_rawsearch(name)
+    item1 = item
+    if item != None:
+        print("\n1. Change name\n2. Change quantity\n3. Change price\n4. Change type")
+        while True:
+            while True:
+                try:
+                    cmd = int(input("> "))
+                    break
+                except ValueError:
+                    print("Please chose an option from the numbers above")
+            if cmd == 1:
+                for item in stock:
+                    if item[1] == name:
+                        name2 = input('New name: ').lower()
+                        if item_rawsearch(name2) == None:
+                            item[1] = name2
+                            log(f"Item {item[0]} '{name}' renamed '{name2}'")
+                            updatetable(stock)
+                            print("Item update succesful")
+                            input("Press RETURN to exit...")
+                            return
+                        else:
+                            print(f"Item called {name2} already exists.")
+                            input("Press RETURN to exit...")
+                            return
+            elif cmd == 2:
+                print("\n1. Reduce by x\n2. Increase by x\n3. Set to x")
+                while True:
+                    try:
+                        cmd = int(input("> "))
+                        break
+                    except ValueError:
+                        print("Please chose an option from the numbers above")
+                for item in stock:
+                    if item[1] == name:
+                        if cmd == 1:
+                            while True:
+                                try:
+                                    qty = int(input("Quantity to subtract: "))
+                                    qty_sub(item[0], qty)
+                                    break
+                                except ValueError:
+                                    print("Please chose an option from the numbers above")
+                        elif cmd == 2:
+                            while True:
+                                try:
+                                    qty = int(input("Quantity to add: "))
+                                    qty_add(item[0], qty)
+                                    break
+                                except ValueError:
+                                    print("Please chose an option from the numbers above")
+                        elif cmd == 3:
+                             while True:
+                                try:
+                                    qty = int(input("Quantity to change to: "))
+                                    item[2] = qty
+                                    break
+                                except ValueError:
+                                    print("Please chose an option from the numbers above")
+                print(f"Changed quantity of {name} to {item[2]}")
+            elif cmd == 3:
+                while True:
+                    try:
+                        price = float(input("New Price: "))
+                        item[3] = price
+                        break
+                    except ValueError:
+                        print("Please chose an option from th enumbers above")
+                break
+            elif cmd == 4:
+                type = input("New type: ").lower()
+                item[4] = type
+                break
+        updatetable(stock)
+        log(f"""Updated item {item[0]} '{item[1]}'
+                Old: {item1}
+                New: {item}""")
+        input("Press RETURN to exit...")               
+    else:
+        print(f"Item called {name} does not exist.")
+        input("Press RETURN to exit...")
+
+def table_print():
+    for item in stock:
+        print(f"""
+        ID: {item[0]}
+        Name: {item[1]}
+        Quantity: {item[2]}
+        Price: {item[3]}
+        Type: {item[4]}
+        """)
+    input("Press RETURN to exit...")
+
+def item_search():
+    name = input("\nItem name: ").lower()
+    item = item_rawsearch(name)
+    if item[1] == name:
+        print(f"""
+        ID: {item[0]}
+        Name: {item[1]}
+        Quantity: {item[2]}
+        Price: {item[3]}
+        Type: {item[4]}
+        """)
+    else:
+        print(f"No item called {name}")
+    input("Press RETURN to exit...")
+
+while True:
+    print('\n' * 100)
+    updatelist()
+    print(stock)
+    print("1. Sale\n2. Restock/Return\n3. Update Item\n4. Add Item\n5. Logs\n6. Items\n7. Search")
+    while True:
+        try:
+            cmd = int(input("> "))
+            break
+        except ValueError:
+            print("Please chose an option from the numbers above")
+        except:
+            print("Unexpected error")
+
+    if cmd == 1:
+        item_sale()
+    elif cmd == 2:
+        item_stock()
+    elif cmd == 3:
+        item_upd()
+    elif cmd == 4:
+        item_add()
+    elif cmd == 5:
+        logs()
+    elif cmd == 6:
+        table_print()
+    elif cmd == 7:
+        item_search()
+    else:
+        print("Option not recognised")
+        input("Press RETURN to continue...")
