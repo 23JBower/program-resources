@@ -1,1 +1,25 @@
+import os
+import requests
 
+url = "https://raw.githubusercontent.com/23JBower/program-resources/refs/heads/main/"
+verified1 = False
+
+if requests.get(f"{url}sdbms-latest%20stable").status_code == 200:
+    print("First time setup...")
+    while verified1 == False:
+        print("Downloading dbms.py")
+
+        f = open("dbms.py", "w")
+        f.write(requests.get(f"{url}sdbms-latest%20stable").text)
+        f.close()
+
+        f = open("dbms.py", "r")
+        print("Verifying dbms.py...")
+        if f.read() == requests.get(f"{url}sdbms-latest%20stable").text:
+            verified1 = True
+            print("dbms.py succesfully downloaded")
+        else:
+            print("Download verification failed, retrying")
+    # os.remove("setup.py")
+else:
+    print("Download link for 'sdbms' returned HTTP code", requests.get(f"{url}sdbms-latest%20stable").status_code)
