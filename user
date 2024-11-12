@@ -1,1 +1,135 @@
+import os
+import ast
+import random
 
+
+
+basedir = os.getcwd()
+try:
+    os.chdir("tables")
+
+except FileNotFoundError:
+    try:
+        os.mkdir("tables")
+        os.chdir("tables")
+        f = open("stock.db", "w")
+        f.write('[]')
+        f.close()
+    except PermissionError:
+        print(f"The application does not have permisison to ctreate or change to the {basedir}/tables directory!")
+except PermissionError:
+    print(f"The application does not have permisison to ctreate or change to the {basedir}/tables directory!")
+except:
+    print("An unexpected error has occurred")
+
+os.chdir(basedir)
+print(os.getcwd())
+
+def usertable_update(users):
+    f = open("users.db", "w")
+    f.write(users)
+    f.close()
+
+def userlist_update():
+    global users
+    f = open("users.db", "r")
+    users = ast.literal_eval(f.read())
+    f.close()
+
+def user_rawsearch(opt, login = False):
+    f = open("users.db", "r")
+    users = ast.literal_eval(f.read())
+    if login == True:
+        for user in users:
+            if user[2] == opt:
+                return user
+    else:
+        f = open("users.db", "r")
+        users = ast.literal_eval(f.read())
+        if type(opt) == int:
+            for user in users:
+                if user[0] == opt or user[2] == opt:
+                    return user
+        else:
+            for user in users:
+                if user[1] == opt:
+                    return user
+
+# def user_create():
+
+def user_login():
+    try:
+        while True:
+            while True:
+                try:
+                    pin = int(input("Enter pin: "))
+                    break
+                except ValueError:
+                    print("Please enter a valid pin")
+            if user_rawsearch(pin, True) == None:
+                print("Incorrect pin; if you have forgotten your pin or think this is a mistake contact your system administrator")
+            else:
+                account = user_rawsearch(pin, True)
+                return [account[0], account[1], account[3]]
+    except FileNotFoundError:
+        print(os.getcwd())
+
+def user_upd(perm):
+    global users
+    user = input("User id, pin or name: ")
+    try:
+        user = int(user)
+        acc = item_rawsearch(user)
+    except ValueError:
+        acc = item_rawsearch(user)
+    if acc != None:
+        for account in users:
+            if user in account:
+                print("\n1. Update name\n2. Update pin\n3. Update permission\n4.Delete user")
+                while True:
+                    try:
+                        cmd = int(input("> "))
+                        break
+                    except ValueError:
+                        print("Please chose an option from the numbers above")
+                if cmd == 1:
+                    account[1] = str(input("New name: "))
+                elif cmd == 2:
+                    while True:
+                        while True:
+                            try:
+                                pin = int(input("New pin: "))
+                                break
+                            except ValueError:
+                                print("Please enter a valid number pin")
+                        if user_rawsearch(pin) != None:
+                            print("Pin entered already in use")
+                        else:
+                            account[2] = pin
+                            print("Sucessfully updated pin...")
+                            input("Press RETURN to exit...")
+                            break
+                elif cmd == 3:
+                    while True:
+                        try:
+                            user_perm = int(input("New permission: "))
+                            break
+                        except ValueError:
+                            print("Please enter a vaalid permission lvele below your own.")
+                    if user_perm < perm and user_perm > 0:
+                        account[3] = user_perm
+                    else:
+                        print("Entered permission must be belowyour own and above 0")
+                        input("Press RETURN to exit...")
+                elif cmd == 4:
+                    print("WARNING: DESTRUCTIVE ACTION")
+                    code = random.randint(100000, 999999)
+                    print(f"Enter  '{code}' to confirm deletion of user {account[0]} '{account[1]}'")
+                    if input("Code: ") == str(code):
+                        print("Not implemented")
+            else:
+                print("Your permission level must be above the user's")
+                input("Press RETURN to exit...")
+    else:
+        print("Entered user does not exist")
+        input("Press RETURN to exit...")
