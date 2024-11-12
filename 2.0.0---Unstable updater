@@ -29,18 +29,18 @@ if requests.get(f"{url}user").status_code == 200:
     while verified2 == False:
         print("Downloading user.py")
 
-f = open("user.py", "w")
-f.write(requests.get(f"{url}user").text)
-f.close()
+        f = open("user.py", "w")
+        f.write(requests.get(f"{url}user").text)
+        f.close()
 
-f = open("user.py", "r")
-print("Verifying dbms.py...")
+        f = open("user.py", "r")
+        print("Verifying user.py...")
         if f.read() == requests.get(f"{url}user").text:
             verified2 = True
             print("user.py successfully downloaded")
         else:
             print("Download verification failed, retrying")
 else:
-    print("Download link for 'user 2.0.0---Unstable' returned HTTP code", requests.get(f"{url}dbms").status_code)
+    print("Download link for 'user 2.0.0---Unstable' returned HTTP code", requests.get(f"{url}user").status_code)
 
 os.remove("setup.py")
