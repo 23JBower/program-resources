@@ -19,8 +19,8 @@ retrieve any additional data from the backend for them.
 
 ## Reporting a Vulnerability
 
-Use this section to tell people how to report a vulnerability.
+To report a vulnerability privately email jonathanbower2483@gmail.com,
+to create a public advisory go [here](https://github.com/23JBower/program-resources/security/advisories/new) and fill in the format.
 
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+All vulnerability reports are investiagted and recreated, if a vulnerability is confirmed and a risk to data or personal details 
+a fix will be started as soon as possible and an official advisory may be released.
