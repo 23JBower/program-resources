@@ -1,6 +1,21 @@
 import os
 import ast
+import requests
+import shutil
+from users import user_login, user_upd
+
+global url
+global system_version
 global stock
+
+url = "https://raw.githubusercontent.com/23JBower/program-resources/refs/heads/main/"
+system_version = '2.0.0-dev'
+
+class User:
+  def __init__(self, id, name, perm):
+    self.id = id
+    self.name = name
+    self.perm = perm
 
 basedir = os.getcwd()
 try:
@@ -19,6 +34,54 @@ except PermissionError:
     print(f"The application does not have permisison to ctreate or change to the {basedir}/tables directory!")
 except:
     print("An unexpected error has occurred")
+
+def log(action, message):
+    cdir = os.getcwd()
+    os.chdir(basedir + '/tables')
+    f = open('logs.db', 'r')
+    logs = ast.literal_eval(f.read())
+    f.close()
+    logid = len(logs) + 1
+    log = [logid, user.id, action, message]
+    logs.append(log)
+    f = open('logs.db', 'w')
+    f.write(str(logs))
+    f.close()
+    os.chdir(cdir)
+
+def system_update():
+    cdir = os.getcwd()
+    os.chdir(basedir)
+    global system_version
+    global url
+    latest_version = requests.get(url + 'sdbms-latest%20stable%20ver').text
+    if system_version != latest_version:
+        print(f"You aren't running the latest stable version;\nCurrent version: {system_version}\nLatest Stable: {latest_version}\nWould you like to update now?\n1. Yes\n2. No")
+        while True:
+            while True:
+                try:
+                    cmd = int(input("> "))
+                    break
+                except ValueError:
+                    print("Please chose an option from the numbers above")
+            if cmd == 1:
+                print("Updating: Please ensure you are connected to the internet!")
+                f = open("update.py", "w")
+                f.write(requests.get(url + 'sdbms-latest%20stable%20updater').text)
+                f.close()
+                import update
+                print("Update complete")
+                input("Press RETURN to exit...")
+                break
+            elif cmd == 2:
+                print("Update aborted!")
+                input("Press RETURN to exit...")
+                break
+            else:
+                print("Unknown command, please chose 1 for 'yes' or 2 for 'no'")
+    os.chdir(cdir)
+
+system_update()
 
 def updatelist():
     global stock
@@ -68,14 +131,6 @@ def qty_add(id = None, qty = 0):
         print("No ID or no quantity provided for qty_add operation")
         input("Press RETURN to exit...")
 
-def log(message):
-    cdir = os.getcwd()
-    os.chdir(basedir)
-    f = open("DBMS.log", "a")
-    f.write(message + "\n")
-    f.close()
-    os.chdir(cdir)
-
 def item_add():
     global stock
     id = len(stock) + 1
@@ -96,7 +151,7 @@ def item_add():
         type = str(input("Type: ").lower())
         item = [id, name, qty, price, type]
         stock.append(item)
-        log(f"Added item {id} '{name}' to stock")
+        log('Add Item', f"Added item {id} '{name}' to stock")
         updatetable(stock)
         print(f"Added item {id} '{name}' to stock")
         input("Press RETURN to exit...")
@@ -124,7 +179,7 @@ def item_sale():
                     except ValueError:
                         print("Please chose an option from the numbers above")
                 if cmd == 1:
-                    log(f"Sale confirmed for x{qty} {name}(s) for £{price}")
+                    log('Sale', f"Sale confirmed for x{qty} {name}(s) for £{price}")
                     qty_sub(item[0], qty)
                     updatetable(stock)
                     print("Sale sucessful")
@@ -159,7 +214,7 @@ def item_stock():
                 except ValueError:
                     print("Please chose an option from the numbers above")
             if cmd == 1:
-                log(f"Restock confirmed for x{qty} {name}(s)")
+                log('Restock', f"Restock confirmed for x{qty} {name}(s)")
                 qty_add(item[0], qty)
                 updatetable(stock)
                 print("Restock sucessful")
@@ -177,10 +232,12 @@ def item_stock():
 
 def logs():
     cdir = os.getcwd()
-    os.chdir(basedir)
-    f = open("DBMS.log", "r")
-    print(f.read())
+    os.chdir(basedir + '/tables')
+    f = open("logs.db", "r")
+    logs = ast.literal_eval(f.read())
     f.close()
+    for log in logs:
+        print(log)
     os.chdir(cdir)
     input("Press RETURN to exit...")
 
@@ -204,7 +261,7 @@ def item_upd():
                         name2 = input('New name: ').lower()
                         if item_rawsearch(name2) == None:
                             item[1] = name2
-                            log(f"Item {item[0]} '{name}' renamed '{name2}'")
+                            log('Item Updated', f"Item {item[0]} '{name}' renamed '{name2}'")
                             updatetable(stock)
                             print("Item update succesful")
                             input("Press RETURN to exit...")
@@ -262,7 +319,7 @@ def item_upd():
                 item[4] = type
                 break
         updatetable(stock)
-        log(f"""Updated item {item[0]} '{item[1]}'
+        log('Ityem Updated', f"""Updated item {item[0]} '{item[1]}'
                 Old: {item1}
                 New: {item}""")
         input("Press RETURN to exit...")               
@@ -296,20 +353,64 @@ def item_search():
         print(f"No item called {name}")
     input("Press RETURN to exit...")
 
-while True:
-    print('\n' * 100)
-    updatelist()
-    print(stock)
-    print("1. Sale\n2. Restock/Return\n3. Update Item\n4. Add Item\n5. Logs\n6. Items\n7. Search")
+# while True:
+#     print('\n' * 100)
+#     updatelist()
+#     print(stock)
+#     print("1. Sale\n2. Restock/Return\n3. Update Item\n4. Add Item\n5. Logs\n6. Items\n7. Search")
+#     while True:
+#         try:
+#             cmd = int(input("> "))
+#             break
+#         except ValueError:
+#             print("Please chose an option from the numbers above")
+#     if cmd == 1:
+#         item_sale()
+#     elif cmd == 2:
+#         item_stock()
+#     elif cmd == 3:
+#         item_upd()
+#     elif cmd == 4:
+#         item_add()
+#     elif cmd == 5:
+#         logs()
+#     elif cmd == 6:
+#         table_print()
+#     elif cmd == 7:
+#         item_search()
+#     else:
+#         print("Option not recognised")
+#         input("Press RETURN to continue...")
+
+def user_l1():
+    print("1. Sale\n2. Restock\n3. Items\n4. Search")
     while True:
         try:
             cmd = int(input("> "))
             break
         except ValueError:
             print("Please chose an option from the numbers above")
-        except:
-            print("Unexpected error")
+    if cmd == 1:
+        item_sale()
+    elif cmd == 2:
+        item_stock()
+        logs()
+    elif cmd == 3:
+        table_print()
+    elif cmd == 4:
+        item_search()
+    else:
+        print("Option not recognised")
+        input("Press RETURN to continue...")
 
+def user_l2():
+    print("1. Sale\n2. Restock/Return\n3. Update Item\n4. Add Item\n5. Logs\n6. Items\n7. Search\n8. Update User")
+    while True:
+        try:
+            cmd = int(input("> "))
+            break
+        except ValueError:
+            print("Please chose an option from the numbers above")
     if cmd == 1:
         item_sale()
     elif cmd == 2:
@@ -324,6 +425,70 @@ while True:
         table_print()
     elif cmd == 7:
         item_search()
+    elif cmd == 8:
+        user_upd(user.perm)
     else:
         print("Option not recognised")
         input("Press RETURN to continue...")
+
+def user_l3():
+    print("1. Sale\n2. Restock/Return\n3. Update Item\n4. Add Item\n5. Logs\n6. Items\n7. Search\n8. Update User\n9. Update System")
+    while True:
+        try:
+            cmd = int(input("> "))
+            break
+        except ValueError:
+            print("Please chose an option from the numbers above")
+    if cmd == 1:
+        item_sale()
+    elif cmd == 2:
+        item_stock()
+    elif cmd == 3:
+        item_upd()
+    elif cmd == 4:
+        item_add()
+    elif cmd == 5:
+        logs()
+    elif cmd == 6:
+        table_print()
+    elif cmd == 7:
+        item_search()
+    elif cmd == 8:
+        user_upd(user.perm)
+    elif cmd == 9:
+        system_update()
+    else:
+        print("Option not recognised")
+        input("Press RETURN to continue...")
+
+def dev():
+    while True:
+        func = input(f"<DEV {os.getcwd()}> ")
+        if func == 'quit':
+            break
+        else:
+            try:
+                out = (eval(func))
+                if out != None:
+                    print(out)
+            except Exception as e:
+                print(f"Error: {e}.")
+
+while True:
+    print('\n' * 100)
+    updatelist()
+    user = user_login()
+    if user != None:
+        user = User(user[0], user[1], user[2])
+        if user.perm  == 1:
+            user_l1()
+        elif user.perm == 2:
+            user_l2()
+        elif user.perm == 3:
+            user_l3()
+        elif user.perm == 4:
+            dev()
+        else:
+            print(f"An user login error has occured, invalid permission level, received {user.perm}, should have received 1-3")
+    else:
+        print("An user login error has occured, returned 'None' when user requested.")
