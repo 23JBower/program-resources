@@ -1,7 +1,36 @@
 {
-"system":
-    {
-    "name": "PyOS",
-    "version": 0.1
-    }
+    "system":
+        {
+            "name": "PyOS",
+            "version": 0.1,
+            "source": "https://raw.githubusercontent.com/23JBower/program-resources/refs/heads/PyOS/PyOS-0.1.load"
+        },
+
+    "structure":
+        [
+            "sys",
+            "sys/sources",
+            "sys/logs",
+            "sys/logs/boot",
+            "sys/users",
+            "sys/users/permissions",
+            "sys/users/hash",
+            "bin",
+            "users",
+            "users/admin",
+            "users/admin/programs",
+            "users/admin/documents",
+            "users/admin/downloads",
+            "global",
+            "global/programs",
+            "global/documents"
+        ],
+    "files":
+            [
+                {
+                    "name": "sys.py",
+                    "dir": "sys",
+                    "content": "test"
+                }
+            ]
 }
